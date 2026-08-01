@@ -1,0 +1,119 @@
+module single_port_ram(clk,addr,wr_en,write_data,read_data);
+input clk;
+input [31:0]addr;
+input wr_en;
+input [31:0]write_data;
+output reg[31:0]read_data;
+
+reg [31:0]mem[0:63]; //created a memory structure of 32 bits and 64 locations
+
+always@(posedge clk)begin
+     if(wr_en)mem[addr] <=write_data;
+     else read_data <=mem[addr];
+end
+endmodule
+
+module single_port_ram_tb();
+reg clk;
+reg [31:0]addr;
+reg wr_en;
+reg [31:0]write_data;
+wire [31:0]read_data;
+
+single_port_ram dut(clk,addr,wr_en,write_data,read_data);
+
+always #5 clk=~clk;
+
+initial begin
+clk=1'b0;
+wr_en=1'b0;
+addr=32'd0;
+write_data=32'd0;
+#12 wr_en=1'b1;
+#12;
+addr=32'd1;
+write_data=32'd1;
+#12;
+addr=32'd2;
+write_data=32'd2;
+#12;
+addr=32'd3;
+write_data=32'd3;
+#12;
+addr=32'd4;
+write_data=32'd4;
+#12;
+addr=32'd5;
+write_data=32'd5;
+#12;
+addr=32'd6;
+write_data=32'd6;
+#12;
+addr=32'd7;
+write_data=32'd7;
+#12;
+addr=32'd7;
+write_data=32'd7;
+#12;
+addr=32'd8;
+write_data=32'd8;
+#12;
+addr=32'd9;
+write_data=32'd9;
+#12;
+addr=32'd10;
+write_data=32'd10;
+#12;
+addr=32'd11;
+write_data=32'd11;
+#12;
+addr=32'd12;
+write_data=32'd12;
+#12 wr_en=1'b0;
+addr=32'd0;
+#12 addr=32'd1;
+#12 addr=32'd2;
+#12 addr=32'd3;
+#12 addr=32'd4;
+#12 addr=32'd5;
+#12 addr=32'd6;
+#12 addr=32'd7;
+#12 addr=32'd8;
+#12 addr=32'd9;
+#12 addr=32'd10;
+#12 addr=32'd11;
+#12 addr=32'd12;
+#12 $finish;
+end
+endmodule
+module top(clk);
+input clk;
+
+wire wr_en;
+wire [31:0]addr,write_data,read_data;
+
+single_port_ram ram(clk,addr,wr_en,write_data,read_data);
+
+ila_0 ila (
+	.clk(clk), // input wire clk
+
+
+	.probe0(wr_en), // input wire [0:0]  probe0  
+	.probe1(addr), // input wire [31:0]  probe1 
+	.probe2(write_data), // input wire [31:0]  probe2 
+	.probe3(read_data) // input wire [31:0]  probe3
+);
+
+vio_0 vio (
+  .clk(clk),                // input wire clk
+  .probe_in0(read_data),    // input wire [31 : 0] probe_in0
+  .probe_out0(wr_en),  // output wire [0 : 0] probe_out0
+  .probe_out1(addr),  // output wire [31 : 0] probe_out1
+  .probe_out2(write_data)  // output wire [31 : 0] probe_out2
+);
+
+endmodule
+
+
+create_clock -period 41.667 -name sys_clk [get_ports clk]
+set_property -dict {PACKAGE_PIN D13 IOSTANDARD LVCMOS33} [get_ports clk]

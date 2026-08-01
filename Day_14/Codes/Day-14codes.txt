@@ -1,0 +1,77 @@
+`timescale 1ns / 1ps
+
+module seg_1234 (
+    input  wire clk_24mhz,
+    output reg  seg_cs  = 1,
+    output reg  seg_clk = 0,
+    output reg  seg_din = 0
+);
+
+    // ─── 1 MHz SPI tick (24 MHz / 24) ───
+    reg [4:0] div = 0;
+    wire tick = (div == 23);
+    always @(posedge clk_24mhz)
+        if (tick) div <= 0; else div <= div + 1;
+
+    // ─── SPI FSM ───
+    reg [5:0]  state = 0;
+    reg [15:0] shift = 0;
+    reg [2:0]  cmd   = 0;
+
+    always @(posedge clk_24mhz) begin
+        if (tick) begin
+
+            if (state == 0) begin
+                seg_cs  <= 0;
+                seg_clk <= 0;
+                case (cmd)
+                    // Init commands
+                    3'd0: shift <= 16'h0C01; // Normal operation
+                    3'd1: shift <= 16'h09FF; // Code-B decode
+                    3'd2: shift <= 16'h0A08; // Intensity mid
+                    3'd3: shift <= 16'h0B03; // Scan limit 4 digits
+                    // Fixed digits: 1 2 3 4
+                    3'd4: shift <= {8'h01, 4'h0, 4'd1}; // rightmost → 1
+                    3'd5: shift <= {8'h02, 4'h0, 4'd2};
+                    3'd6: shift <= {8'h03, 4'h0, 4'd3};
+                    3'd7: shift <= {8'h04, 4'h0, 4'd4}; // leftmost  → 4
+                endcase
+                state <= 1;
+            end
+
+            else if (state <= 32) begin
+                if (state[0]) begin          // odd: put bit
+                    seg_din <= shift[15];
+                    seg_clk <= 0;
+                end else begin               // even: clock rise
+                    seg_clk <= 1;
+                    shift   <= {shift[14:0], 1'b0};
+                end
+                state <= state + 1;
+            end
+
+            else begin                       // state 33: latch
+                seg_cs  <= 1;
+                seg_clk <= 0;
+                cmd     <= (cmd < 7) ? cmd + 1 : 3'd4;
+                state   <= 0;
+            end
+
+        end
+    end
+
+Endmodule
+
+
+
+
+
+
+
+
+
+
+
+
+
+set_property PACKAGE_PIN D13 [get_ports clk_24mhz] set_property IOSTANDARD LVCMOS33 [get_ports clk_24mhz] create_clock -period 41.667 -name clk_24mhz [get_ports clk_24mhz] set_property PACKAGE_PIN J16 [get_ports seg_cs] set_property PACKAGE_PIN H12 [get_ports seg_clk] set_property PACKAGE_PIN J15 [get_ports seg_din] set_property IOSTANDARD LVCMOS33 [get_ports seg_cs] set_property IOSTANDARD LVCMOS33 [get_ports seg_clk] set_property IOSTANDARD LVCMOS33 [get_ports seg_din] 

@@ -1,0 +1,111 @@
+module fifo(clk,rst,wr_en,rd_en,write_data,read_data,full,empty);
+input clk,rst;
+input wr_en,rd_en;
+input [7:0]write_data;
+output reg[7:0]read_data;
+output full,empty;
+
+reg [7:0]mem[0:15];
+
+reg [4:0]wr_ptr,rd_ptr;
+
+ wire pos_det_wr_en;
+ wire pos_det_rd_en;
+ 
+ reg wr_en_d;
+ reg rd_en_d;
+
+assign empty= wr_ptr==rd_ptr;
+assign full= (wr_ptr[4]!=rd_ptr[4]) && (wr_ptr[3:0]==rd_ptr[3:0]);
+
+//Write Logic
+always@(posedge clk)begin
+ if(rst)begin
+   wr_ptr <=5'b0;
+ end else if(pos_det_wr_en && !full)begin
+   mem[wr_ptr[3:0]] <= write_data;
+   wr_ptr <=wr_ptr+1;
+ end
+end
+
+//Read Logic
+always@(posedge clk)begin
+ if(rst)begin
+   rd_ptr <=5'b0;
+   read_data <=8'b0;
+ end else if (pos_det_rd_en && !empty)begin
+   read_data <= mem[rd_ptr[3:0]];
+   rd_ptr <= rd_ptr+1;
+ end
+end
+
+ 
+ //posedge detector
+ always@(posedge clk)begin
+ if(rst)wr_en_d <=1'b0;
+ else wr_en_d <=wr_en;
+ end
+ 
+  always@(posedge clk)begin
+  if(rst)rd_en_d <=1'b0;
+  else rd_en_d <=rd_en;
+ 
+ end
+ 
+ assign pos_det_wr_en= ~wr_en_d & wr_en; 
+ assign pos_det_rd_en= ~rd_en_d & rd_en;
+ 
+endmodule
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Clock
+create_clock -period 41.667 -name sys_clk [get_ports clk]
+set_property -dict {PACKAGE_PIN D13 IOSTANDARD LVCMOS33} [get_ports clk]
+
+
+## User LEDs (L1-L8 shown; extend to L16)
+set_property -dict {PACKAGE_PIN D5  IOSTANDARD LVCMOS33} [get_ports read_data[7]]
+set_property -dict {PACKAGE_PIN A3  IOSTANDARD LVCMOS33} [get_ports read_data[6]]
+set_property -dict {PACKAGE_PIN B4  IOSTANDARD LVCMOS33} [get_ports read_data[5]]
+set_property -dict {PACKAGE_PIN A4  IOSTANDARD LVCMOS33} [get_ports read_data[4]]
+set_property -dict {PACKAGE_PIN E6  IOSTANDARD LVCMOS33} [get_ports read_data[3]]
+set_property -dict {PACKAGE_PIN C13  IOSTANDARD LVCMOS33} [get_ports read_data[2]]
+set_property -dict {PACKAGE_PIN C14 IOSTANDARD LVCMOS33} [get_ports read_data[1]]
+set_property -dict {PACKAGE_PIN D14 IOSTANDARD LVCMOS33} [get_ports read_data[0]]
+
+
+## Slide Switches
+set_property -dict {PACKAGE_PIN C9  IOSTANDARD LVCMOS33} [get_ports write_data[7]]
+set_property -dict {PACKAGE_PIN B9  IOSTANDARD LVCMOS33} [get_ports write_data[6]]
+set_property -dict {PACKAGE_PIN G5  IOSTANDARD LVCMOS33} [get_ports write_data[5]]
+set_property -dict {PACKAGE_PIN A7  IOSTANDARD LVCMOS33} [get_ports write_data[4]]
+set_property -dict {PACKAGE_PIN C7 IOSTANDARD LVCMOS33} [get_ports write_data[3]]
+set_property -dict {PACKAGE_PIN A10 IOSTANDARD LVCMOS33} [get_ports write_data[2]]
+set_property -dict {PACKAGE_PIN B7 IOSTANDARD LVCMOS33} [get_ports write_data[1]]
+set_property -dict {PACKAGE_PIN A8 IOSTANDARD LVCMOS33} [get_ports write_data[0]]
+
+
+set_property -dict {PACKAGE_PIN A13  IOSTANDARD LVCMOS33} [get_ports rst]
+set_property -dict {PACKAGE_PIN F5  IOSTANDARD LVCMOS33} [get_ports wr_en]
+set_property -dict {PACKAGE_PIN E3  IOSTANDARD LVCMOS33} [get_ports rd_en]
+
+
