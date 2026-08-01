@@ -1,0 +1,7 @@
+create_clock -period 41.667 -name sys_clk [get_ports clk_24mhz]
+set_property -dict {PACKAGE_PIN D13 IOSTANDARD LVCMOS33} [get_ports clk_24mhz]
+set_property -dict {PACKAGE_PIN C9  IOSTANDARD LVCMOS33} [get_ports rst]
+set_property -dict {PACKAGE_PIN T2  IOSTANDARD LVCMOS33} [get_ports uart_rx]
+set_property -dict {PACKAGE_PIN R2  IOSTANDARD LVCMOS33} [get_ports uart_tx]
+set_property -dict {PACKAGE_PIN A3  IOSTANDARD LVCMOS33} [get_ports control_out]
+set_property -dict {PACKAGE_PIN D5  IOSTANDARD LVCMOS33} [get_ports locked]
